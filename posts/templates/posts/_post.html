@@ -1,3 +1,4 @@
+{% load bootstrap4 %}
 <div class="col-10 my-3">
     <div class="card">
         <div class="card-header">
@@ -25,14 +26,41 @@
             <img src="#" class="card-img-top" alt="NO_IMAGE">
         {% endif %}
         <div class="card-body">
-            <p class-"card-text">{{ post.content }}</p>
+            <p class="card-text">{{ post.content }}</p>
             {% if request.user == post.user %}
-                <a href="{% url 'posts:update' post.pk %}" class="btn btn-warning">수정</a>
-                <form action="{% url 'posts:delete' post.pk %}" method = "POST" style="display:inline;">
+                <a href="{% url 'posts:update' post.pk %}" class="btn btn-warning" style="display:inline">수정</a>
+                <form action="{% url 'posts:delete' post.pk %}" method = "POST" style="display: inline">
                     {% csrf_token %}
                     <input type="submit" value="삭제" class="btn btn-danger">
                 </form>
             {% endif %}
         </div>
+        
+        
+        {% for comment in post.comment_set.all %}
+            <li class="card-text"><strong>{{ comment.user }} </strong>{{ comment.content }}
+                {% if comment.user == request.user %}
+                    <form action="{% url 'posts:comment_delete' post.pk comment.pk %}" method="POST" style="display: inline">
+                        {% csrf_token %}
+                        <!--<input type="submit" value="삭제" class="btn btn-warning">-->
+                        <button type="submit" class="border-0"><i class="fas fa-times"></i></button>
+                    </form>
+                {% endif %}
+            </li>
+        {% empty %}
+            <p>댓글이 없습니다.</p>
+        {% endfor %}
+        <div class="card-footer text-muted">
+            {% if user.is_authenticated %}
+                <form action="{% url 'posts:comment_create' post.pk %}" method='POST'>
+                    {% csrf_token %}
+                    {% bootstrap_form comment_form %}
+                    <input type="submit" value="작성" class="btn btn-info">
+                </form>
+            {% else %}
+                <a href="{% url 'accounts:login' %}" class="card-link">댓글을 작성하려면 로그인하세요.</a>
+            {% endif %}
+        </div>
+        
     </div>
 </div>
