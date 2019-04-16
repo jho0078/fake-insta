@@ -26,6 +26,17 @@
             <img src="#" class="card-img-top" alt="NO_IMAGE">
         {% endif %}
         <div class="card-body">
+            <h1>
+                <a href="{% url 'posts:like' post.pk %}">
+                    {% if user in post.like_users.all %}
+                        <i class="fas fa-democrat fa-lg" style="color:crimson"></i>
+                    {% else %}
+                        <i class="fas fa-democrat fa-lg" style="color:black"></i>
+                    {% endif %}
+                </a>
+            </h1>
+            <p class="card-text">{{ post.like_users.count }} 명이 좋아합니다. 히이잉~</p>
+            
             <p class="card-text">{{ post.content }}</p>
             {% if request.user == post.user %}
                 <a href="{% url 'posts:update' post.pk %}" class="btn btn-warning" style="display:inline">수정</a>
@@ -34,22 +45,22 @@
                     <input type="submit" value="삭제" class="btn btn-danger">
                 </form>
             {% endif %}
+        
+            {% for comment in post.comment_set.all %}
+                <div class="card-text"><strong>{{ comment.user }} </strong>{{ comment.content }}
+                    {% if comment.user == request.user %}
+                        <form action="{% url 'posts:comment_delete' post.pk comment.pk %}" method="POST" style="display: inline">
+                            {% csrf_token %}
+                            <!--<input type="submit" value="삭제" class="btn btn-warning">-->
+                            <button type="submit" class="border-0"><i class="fas fa-times"></i></button>
+                        </form>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <p>댓글이 없습니다.</p>
+            {% endfor %}
         </div>
         
-        
-        {% for comment in post.comment_set.all %}
-            <li class="card-text"><strong>{{ comment.user }} </strong>{{ comment.content }}
-                {% if comment.user == request.user %}
-                    <form action="{% url 'posts:comment_delete' post.pk comment.pk %}" method="POST" style="display: inline">
-                        {% csrf_token %}
-                        <!--<input type="submit" value="삭제" class="btn btn-warning">-->
-                        <button type="submit" class="border-0"><i class="fas fa-times"></i></button>
-                    </form>
-                {% endif %}
-            </li>
-        {% empty %}
-            <p>댓글이 없습니다.</p>
-        {% endfor %}
         <div class="card-footer text-muted">
             {% if user.is_authenticated %}
                 <form action="{% url 'posts:comment_create' post.pk %}" method='POST'>

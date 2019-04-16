@@ -63,11 +63,11 @@ def update(request, post_pk):
     
     
 def delete(request, post_pk):
+    post = get_object_or_404(Post, pk=post_pk)
     
     if post.user != request.user:
         return redirect('posts:list')
     
-    post = get_object_or_404(Post, pk=post_pk)
     if request.method == 'POST':
         post.delete()
     return redirect('posts:list')
@@ -92,5 +92,16 @@ def comment_delete(request, post_pk, comment_pk):
     comment.delete()
     return redirect('posts:list')
     
+@login_required
+def like(request, post_pk):
+    post = get_object_or_404(Post, pk=post_pk)
+    if request.user in post.like_users.all():
+        post.like_users.remove(request.user)
+    else:
+        post.like_users.add(request.user)
+    return redirect('posts:list')
     
+    # user = request.user
+    # if post.like_users.filter(pk=user.pk).exists():
+    #     post.like_users.remove(user)
             
