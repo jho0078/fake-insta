@@ -1,12 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
-# from .forms import UserForm
-from .forms import UserCustomChangeForm, UserCustomCreationForm, ProfileForm
-# from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from .forms import CustomUserChangeForm, CustomUserCreationForm, ProfileForm
 from .models import Profile
 
 
@@ -15,14 +13,14 @@ def signup(request):
         return redirect('posts:list')
         
     if request.method == 'POST':
-        signup_form = UserCustomCreationForm(request.POST)
+        signup_form = CustomUserCreationForm(request.POST)
         if signup_form.is_valid():
             signup_user = signup_form.save()
             Profile.objects.create(user=signup_user)
             auth_login(request, signup_user)
             return redirect('posts:list')
     else:
-        signup_form = UserCustomCreationForm()
+        signup_form = CustomUserCreationForm()
     context = {'signup_form': signup_form}
     return render(request, 'accounts/signup.html', context)
     
@@ -54,13 +52,13 @@ def people(request, username):
 def update(request):
     username = request.user.username
     if request.method == 'POST':
-        update_form = UserCustomChangeForm(request.POST, instance=request.user)
+        update_form = CustomUserChangeForm(request.POST, instance=request.user)
         if update_form.is_valid():
             update_form.save()
             return redirect('people', username)
             
     else:
-        update_form = UserCustomChangeForm(instance=request.user)
+        update_form = CustomUserChangeForm(instance=request.user)
     context = {'update_form': update_form}
     return render(request, 'accounts/update.html', context)
     
@@ -92,3 +90,16 @@ def profile_update(request):
         profile_form = ProfileForm(instance=request.user.profile)
     context = {'profile_form': profile_form}
     return render(request, 'accounts/profile_update.html', context)
+    
+@login_required
+def follow(request, user_pk):
+    people = get_object_or_404(get_user_model(), pk=user_pk)
+    # people 을 팔로워하고 있는 모든 유저에 현재 접속 유저가 있다면
+    if request.user in people.followers.all():
+    # 언팔로우
+        people.followers.remove(request.user)
+    # 아니면
+    else:
+    # 팔로우
+        people.followers.add(request.user)
+    return redirect('people', people.username)

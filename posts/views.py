@@ -1,12 +1,27 @@
 from django.shortcuts import render, redirect, get_object_or_404, get_list_or_404
-from .models import Post, Image, Comment
-from .forms import PostForm, ImageForm, CommentForm
+from itertools import chain
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
+from .forms import PostForm, ImageForm, CommentForm
+from .models import Post, Image, Comment
+from django.db.models import Q
 
 # Create your views here.
+@login_required
 def list(request):
-    posts = get_list_or_404(Post.objects.order_by('-pk'))
+    # user: post의 유저
+    # posts = get_list_or_404(Post.objects.order_by('-pk'))
+    # posts = Post.objects.filter(user__in=request.user.followings.all()).order_by('-pk')
+    
+    # 1
+    followings = request.user.followings.all()
+    posts = Post.objects.filter(Q(user__in=followings) | Q(user=request.user.id)).order_by('-pk')
+    
+    # 2
+    # followings = request.user.followings.all()
+    # chain_followings = chain(followings, [request.user])
+    # posts = Post.objects.filter(user__in=chain_followings).order_by('-pk')
+    
     comment_form = CommentForm()
     context = {
         'posts': posts,
@@ -105,3 +120,14 @@ def like(request, post_pk):
     # if post.like_users.filter(pk=user.pk).exists():
     #     post.like_users.remove(user)
             
+@login_required
+def explore(request):
+    # posts = Post.objects.order_by('-pk')
+    # 내 게시글을 제외한 모든 글을 불러옴
+    posts = Post.objects.exclude(user=request.user).order_by('-pk')
+    comment_form = CommentForm()
+    context = {
+        'posts': posts,
+        'comment_form': comment_form,
+    }
+    return render(request, 'posts/explore.html', context)
