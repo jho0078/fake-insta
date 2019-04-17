@@ -9,6 +9,10 @@ class Post(models.Model):
     like_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='like_posts', blank=True)
     content = models.TextField()
     
+    # @property
+    # def like_count(self):
+    #     return self.like_users.count()
+    
     def __str__(self):
         return self.content
         
