@@ -1,10 +1,17 @@
 {% extends 'base.html' %}
 {% block content %}
 <h1 class="text-center">{{ people.username }}'s Profile</h1>
+<div class="jumbotron jumbotron-fluid text-center mb-2">
+  <div class="container">
+    <h1 class="display-4">{{ people.profile.nickname }}</h1>
+    <p class="lead">{{ people.profile.introduction }}</p>
+  </div>
+</div>
 <div class="row justify-content-end">
     <div>
         {% if request.user == people %}
-            <a href="{% url 'accounts:update' %}" class="btn btn-outline-secondary">회원 수정</a>
+            <a href="{% url 'accounts:update' %}" class="btn btn-outline-secondary">정보 수정</a>
+            <a href="{% url 'accounts:profile_update' %}" class="btn btn-outline-secondary">프로필 수정</a>
             <a href="{% url 'accounts:password' %}" class="btn btn-outline-secondary">비밀번호 변경</a>
         {% endif %}
     </div>

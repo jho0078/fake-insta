@@ -1,12 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 # from .forms import UserForm
-from .forms import UserCustomChangeForm, UserCustomCreationForm
+from .forms import UserCustomChangeForm, UserCustomCreationForm, ProfileForm
 # from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from .models import Profile
 
 
 def signup(request):
@@ -17,6 +18,7 @@ def signup(request):
         signup_form = UserCustomCreationForm(request.POST)
         if signup_form.is_valid():
             signup_user = signup_form.save()
+            Profile.objects.create(user=signup_user)
             auth_login(request, signup_user)
             return redirect('posts:list')
     else:
@@ -78,3 +80,15 @@ def password(request):
         password_form = PasswordChangeForm(request.user)
     context = {'password_form': password_form}
     return render(request, 'accounts/password.html', context)
+    
+@login_required
+def profile_update(request):
+    if request.method == 'POST':
+        profile_form = ProfileForm(data=request.POST, instance=request.user.profile)
+        if profile_form.is_valid():
+            profile_form.save()
+            return redirect('people', request.user.username)
+    else:
+        profile_form = ProfileForm(instance=request.user.profile)
+    context = {'profile_form': profile_form}
+    return render(request, 'accounts/profile_update.html', context)
