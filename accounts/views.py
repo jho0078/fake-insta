@@ -87,6 +87,7 @@ def password(request):
     
 @login_required
 def profile_update(request):
+    profile = Profile.objects.get_or_create(user=request.user)
     if request.method == 'POST':
         profile_form = ProfileForm(data=request.POST, instance=request.user.profile)
         if profile_form.is_valid():
