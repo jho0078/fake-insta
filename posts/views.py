@@ -3,7 +3,7 @@ from itertools import chain
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from .forms import PostForm, ImageForm, CommentForm
-from .models import Post, Image, Comment
+from .models import Post, Image, Comment, Hashtag
 from django.db.models import Q
 
 # Create your views here.
@@ -38,6 +38,22 @@ def create(request):
             post = post_form.save(commit=False)     #게시글 내용 처리 끝
             post.user = request.user
             post.save()
+            # hasgtag - post.save() 가 된 이후에 hashtag 코드가 와야함.
+            # 1. 게시글을 순회하면서 띄어쓰기를 잘라야함
+            # 2. 자른 단어가 # 으로 시작하나?
+            # 3. 이 해시태그가 기존 해시태그에 있는 건지?
+            for word in post.content.split():
+                # if word[0] == '#':
+                #     if word not in Hashtag.objects.all():
+                #         hashtag = Hashtag.objects.create(content=word)
+                #     post.hashtags.add(hashtag)
+                
+                if word.startswith('#'):
+                    # hashtag, new = Hashtag.objects.get_or_create(content=word)
+                    hashtag = Hashtag.objects.get_or_create(content=word)
+                    post.hashtags.add(hashtag[0])
+                        
+            
             for image in request.FILES.getlist('file'):
                 request.FILES['file'] = image
                 image_form = ImageForm(files=request.FILES)
@@ -67,7 +83,14 @@ def update(request, post_pk):
     if request.method == 'POST':
         post_form = PostForm(request.POST, instance=post)
         if post_form.is_valid():
-            post_form.save()
+            post = post_form.save()
+            # hashtag update
+            post.hashtags.clear()
+            for word in post.content.split():
+                if word.startswith('#'):
+                    hashtag = Hashtag.objects.get_or_create(content=word)
+                    post.hashtags.add(hashtag[0])
+            
             return redirect('posts:list')
     
     else:
@@ -131,3 +154,13 @@ def explore(request):
         'comment_form': comment_form,
     }
     return render(request, 'posts/explore.html', context)
+    
+def hashtag(request, hash_pk):
+    hashtag = get_object_or_404(Hashtag, pk=hash_pk)
+    posts = hashtag.post_set.order_by('-pk')
+    context = {
+        'hashtag': hashtag,
+        'posts': posts,
+    }
+    
+    return render(request, 'posts/hashtag.html', context)

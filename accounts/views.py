@@ -33,6 +33,12 @@ def login(request):
         if login_form.is_valid():
             login_user = login_form.get_user()
             auth_login(request, login_user)
+            # 단축평가
+            # 로그인이 안된 사람이 접근이 불가능한 페이지를 접속하려 하면 
+            # @login_required 에 의해 로그인페이지로 이동하게 된다.
+            # 이 때 ?next=/new/ 이런식으로 원래 이동하려 했던 주소가 next에 저장된다.
+            # 이 주소가 있다면 이 곳으로 리턴하고, 없다면(정상적인 접근)
+            # posts:list 로 이동한다.
             return redirect(request.GET.get('next') or 'posts:list')
     else:
         login_form = AuthenticationForm()
@@ -103,3 +109,8 @@ def follow(request, user_pk):
     # 팔로우
         people.followers.add(request.user)
     return redirect('people', people.username)
+    
+# usercreationform 의 아빠는 modelform 인자 : request.POST, request.FILES ... instance
+# 데이터베이스에 저장
+# authenticationform 의 아빠는 django  인자 : request, request.POST ... instance
+# 세션에 저장

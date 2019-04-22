@@ -1,4 +1,5 @@
 {% load bootstrap4 %}
+{% load posts_templatetags %}
 <div class="col-10 my-3">
     <div class="card">
         <div class="card-header">
@@ -37,7 +38,8 @@
             </h1>
             <p class="card-text">{{ post.like_users.count }} 명이 좋아합니다. 히이잉~</p>
             
-            <p class="card-text">{{ post.content }}</p>
+            <p class="card-text">{{ post|hashtag_link|safe }}</p>
+           
             {% if request.user == post.user %}
                 <a href="{% url 'posts:update' post.pk %}" class="btn btn-warning" style="display:inline">수정</a>
                 <form action="{% url 'posts:delete' post.pk %}" method = "POST" style="display: inline">
